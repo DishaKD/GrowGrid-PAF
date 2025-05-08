@@ -4,10 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.postservice.postservice.Domain.dto.response.PostResponseDTO;
 import com.postservice.postservice.Domain.service.PostService;
-
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
