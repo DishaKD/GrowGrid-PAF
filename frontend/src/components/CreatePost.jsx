@@ -1,89 +1,89 @@
-import React, { useState } from 'react';
-import { FaCode, FaTimes, FaImage, FaVideo } from 'react-icons/fa';
-import api from '../services/api';
+import React, { useState } from "react";
+import { FaCode, FaTimes, FaImage, FaVideo } from "react-icons/fa";
+import api from "../services/postService";
 
 const CreatePost = ({ refreshPosts }) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
-  const [postType, setPostType] = useState('TEXT');
+  const [postType, setPostType] = useState("TEXT");
   const [mediaFile, setMediaFile] = useState(null);
-  const [mediaPreview, setMediaPreview] = useState('');
-  const [language, setLanguage] = useState('javascript');
-  const [code, setCode] = useState('');
-  
+  const [mediaPreview, setMediaPreview] = useState("");
+  const [language, setLanguage] = useState("javascript");
+  const [code, setCode] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      let finalContent = content;
-      let contentUrl = '';
-      
-      // Handle media upload if present
-      if (mediaFile && (postType === 'PHOTO' || postType === 'VIDEO')) {
-        // In a real app, you would upload to a storage service and get back a URL
-        // For now, we'll use object URLs for demo purposes only
-        contentUrl = URL.createObjectURL(mediaFile);
+      const formData = new FormData();
+      formData.append(
+        "description",
+        content +
+          (showCodeEditor && code.trim()
+            ? `\n\n\`\`\`${language}\n${code}\n\`\`\``
+            : "")
+      );
+      formData.append("userId", "1"); // Replace with dynamic user ID later if needed
+
+      if (mediaFile) {
+        formData.append("mediaFiles", mediaFile);
       }
-      
-      // Handle code if present
-      if (showCodeEditor && code.trim()) {
-        finalContent += `\n\n\`\`\`${language}\n${code}\n\`\`\``;
-      }
-      
-      const post = {
-        user: 'Guest',
-        content: finalContent,
-        contentUrl: contentUrl,
-        postType: postType,
-        like: 0,
-        unlike: 0,
-        comments: []
-      };
-      
-      await api.createPost(post);
-      setContent('');
-      setCode('');
+
+      await api.createPost(formData);
+
+      // Reset form state
+      setContent("");
+      setCode("");
       setShowCodeEditor(false);
       setShowMediaUpload(false);
       setMediaFile(null);
-      setMediaPreview('');
-      setPostType('TEXT');
-      
+      setMediaPreview("");
+      setPostType("TEXT");
+
       if (refreshPosts) {
         refreshPosts();
       }
     } catch (err) {
-      console.error('Error creating post', err);
+      console.error("Error creating post", err);
     }
   };
-  
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setMediaFile(file);
-      
+
       // Create preview URL
       const objectUrl = URL.createObjectURL(file);
       setMediaPreview(objectUrl);
-      
+
       // Clean up the preview URL when component unmounts
       return () => URL.revokeObjectURL(objectUrl);
     }
   };
-  
+
   const clearMediaSelection = () => {
     if (mediaPreview) {
       URL.revokeObjectURL(mediaPreview);
     }
     setMediaFile(null);
-    setMediaPreview('');
+    setMediaPreview("");
     setShowMediaUpload(false);
   };
-  
+
   const languages = [
-    'javascript', 'python', 'java', 'cpp', 'csharp', 
-    'html', 'css', 'php', 'ruby', 'go', 'typescript'
+    "javascript",
+    "python",
+    "java",
+    "cpp",
+    "csharp",
+    "html",
+    "css",
+    "php",
+    "ruby",
+    "go",
+    "typescript",
   ];
 
   return (
@@ -91,42 +91,42 @@ const CreatePost = ({ refreshPosts }) => {
       <h3 className="section-title">Create a Post</h3>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <textarea 
+          <textarea
             className="form-control textarea"
             placeholder="Share educational content, ask questions, or post code snippets..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            required={!mediaFile} // Either content or media should be present
+            required={!mediaFile && !code.trim()}
           />
         </div>
-        
+
         {showMediaUpload && (
           <div className="media-upload-container">
             <div className="media-upload-header">
               <div className="flex items-center gap-2">
-                {postType === 'PHOTO' ? <FaImage /> : <FaVideo />}
+                {postType === "PHOTO" ? <FaImage /> : <FaVideo />}
                 <span>Upload {postType.toLowerCase()}</span>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn-icon"
                 onClick={clearMediaSelection}
               >
                 <FaTimes />
               </button>
             </div>
-            <input 
-              type="file" 
-              accept={postType === 'PHOTO' ? 'image/*' : 'video/*'}
+            <input
+              type="file"
+              accept={postType === "PHOTO" ? "image/*" : "video/*"}
               onChange={handleFileChange}
               className="form-control"
             />
             {mediaPreview && (
               <div className="media-preview">
-                {postType === 'PHOTO' ? (
-                  <img 
-                    src={mediaPreview} 
-                    alt="Preview" 
+                {postType === "PHOTO" ? (
+                  <img
+                    src={mediaPreview}
+                    alt="Preview"
                     className="media-preview-image"
                   />
                 ) : (
@@ -139,33 +139,33 @@ const CreatePost = ({ refreshPosts }) => {
             )}
           </div>
         )}
-        
+
         {showCodeEditor && (
           <div className="code-editor-container">
             <div className="code-editor-header">
               <div className="flex items-center gap-2">
                 <FaCode />
-                <select 
+                <select
                   className="form-control"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
                 >
-                  {languages.map(lang => (
+                  {languages.map((lang) => (
                     <option key={lang} value={lang}>
                       {lang.charAt(0).toUpperCase() + lang.slice(1)}
                     </option>
                   ))}
                 </select>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn-icon"
                 onClick={() => setShowCodeEditor(false)}
               >
                 <FaTimes />
               </button>
             </div>
-            <textarea 
+            <textarea
               className="form-control textarea code-textarea"
               placeholder="// Paste your code here"
               value={code}
@@ -173,47 +173,55 @@ const CreatePost = ({ refreshPosts }) => {
             />
           </div>
         )}
-        
+
         <div className="create-post-actions">
           <div className="post-type-actions">
-            <button 
+            <button
               type="button"
-              className={`btn ${postType === 'PHOTO' && showMediaUpload ? 'btn-primary' : 'btn-ghost'}`}
+              className={`btn ${
+                postType === "PHOTO" && showMediaUpload
+                  ? "btn-primary"
+                  : "btn-ghost"
+              }`}
               onClick={() => {
-                setPostType('PHOTO');
+                setPostType("PHOTO");
                 setShowMediaUpload(true);
                 setShowCodeEditor(false);
               }}
             >
               <FaImage /> Photo
             </button>
-            <button 
+            <button
               type="button"
-              className={`btn ${postType === 'VIDEO' && showMediaUpload ? 'btn-primary' : 'btn-ghost'}`}
+              className={`btn ${
+                postType === "VIDEO" && showMediaUpload
+                  ? "btn-primary"
+                  : "btn-ghost"
+              }`}
               onClick={() => {
-                setPostType('VIDEO');
+                setPostType("VIDEO");
                 setShowMediaUpload(true);
                 setShowCodeEditor(false);
               }}
             >
               <FaVideo /> Video
             </button>
-            <button 
+            <button
               type="button"
-              className={`btn ${showCodeEditor ? 'btn-primary' : 'btn-ghost'}`}
+              className={`btn ${showCodeEditor ? "btn-primary" : "btn-ghost"}`}
               onClick={() => {
-                setPostType('TEXT');
+                setPostType("TEXT");
                 setShowCodeEditor(!showCodeEditor);
                 setShowMediaUpload(false);
               }}
             >
-              <FaCode /> {showCodeEditor ? 'Hide Code' : 'Add Code'}
+              <FaCode /> {showCodeEditor ? "Hide Code" : "Add Code"}
             </button>
           </div>
-          <button 
+          <button
             type="submit"
             className="btn btn-primary"
-            disabled={(!content.trim() && !code.trim() && !mediaFile)}
+            disabled={!content.trim() && !code.trim() && !mediaFile}
           >
             Post
           </button>
