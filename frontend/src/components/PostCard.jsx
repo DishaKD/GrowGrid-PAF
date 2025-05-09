@@ -11,7 +11,7 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import api from "../services/api";
+import api from "../services/postService";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
