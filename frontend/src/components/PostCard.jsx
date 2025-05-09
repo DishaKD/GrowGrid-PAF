@@ -1,75 +1,84 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaThumbsUp, FaThumbsDown, FaComment, FaCode, FaTrash, FaEdit, FaImage, FaVideo } from 'react-icons/fa';
-import api from '../services/api';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FaThumbsUp,
+  FaThumbsDown,
+  FaComment,
+  FaShare,
+  FaImage,
+  FaVideo,
+  FaCode,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
+import api from "../services/api";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 const PostCard = ({ post, refreshPosts }) => {
   const [expanded, setExpanded] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
-  const [editContent, setEditContent] = React.useState(post.content);
-  
-  const containsCode = post.content.includes('```');
-  
+  const [editContent, setEditContent] = React.useState(post.description);
+
+  const containsCode = post?.description?.includes("```");
+
   const handleLike = async () => {
     try {
-      await api.likePost(post.id, post.like);
-      if (refreshPosts) refreshPosts();
+      await api.likePost(post.id, post.like || 0);
+      refreshPosts?.();
     } catch (err) {
-      console.error('Error liking post', err);
+      console.error("Error liking post", err);
     }
   };
-  
+
   const handleUnlike = async () => {
     try {
-      await api.unlikePost(post.id, post.unlike);
-      if (refreshPosts) refreshPosts();
+      await api.unlikePost(post.id, post.unlike || 0);
+      refreshPosts?.();
     } catch (err) {
-      console.error('Error unliking post', err);
+      console.error("Error unliking post", err);
     }
   };
-  
+
   const handleDelete = async () => {
     try {
       await api.deletePost(post.id);
-      if (refreshPosts) refreshPosts();
+      refreshPosts?.();
     } catch (err) {
-      console.error('Error deleting post', err);
+      console.error("Error deleting post", err);
     }
   };
-  
+
   const handleEdit = async () => {
     if (editing) {
       try {
-        const updatedPost = { ...post, content: editContent };
+        const updatedPost = { ...post, description: editContent };
         await api.updatePost(post.id, updatedPost);
-        if (refreshPosts) refreshPosts();
+        refreshPosts?.();
         setEditing(false);
       } catch (err) {
-        console.error('Error updating post', err);
+        console.error("Error updating post", err);
       }
     } else {
       setEditing(true);
     }
   };
-  
+
   const formatContent = (content) => {
-    if (!containsCode) return content;
-    
-    const parts = content.split('```');
+    if (!containsCode) return <div>{content}</div>;
+
+    const parts = content.split("```");
     return parts.map((part, index) => {
       if (index % 2 === 0) {
         return <div key={index}>{part}</div>;
       } else {
-        const language = part.split('\n')[0];
+        const language = part.split("\n")[0];
         const code = part.substring(language.length + 1);
         return (
-          <SyntaxHighlighter 
+          <SyntaxHighlighter
             key={index}
-            language={language || 'javascript'} 
+            language={language || "javascript"}
             style={atomOneDark}
-            className="code-block"
           >
             {code}
           </SyntaxHighlighter>
@@ -79,33 +88,23 @@ const PostCard = ({ post, refreshPosts }) => {
   };
 
   const renderMediaContent = () => {
-    if (!post.contentUrl) return null;
-    
-    if (post.postType === 'PHOTO') {
+    if (!post.mediaUrls || post.mediaUrls.length === 0) return null;
+
+    return post.mediaUrls.map((url, index) => {
+      const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
       return (
-        <div className="media-content">
-          <img 
-            src={post.contentUrl} 
-            alt="Post" 
-            className="post-media"
-          />
+        <div key={index} className="media-content">
+          {isVideo ? (
+            <video controls className="post-media">
+              <source src={url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img src={url} alt={`media-${index}`} className="post-media" />
+          )}
         </div>
       );
-    } else if (post.postType === 'VIDEO') {
-      return (
-        <div className="media-content">
-          <video 
-            controls 
-            className="post-media"
-          >
-            <source src={post.contentUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      );
-    }
-    
-    return null;
+    });
   };
 
   return (
@@ -113,10 +112,10 @@ const PostCard = ({ post, refreshPosts }) => {
       <div className="post-header">
         <div className="flex items-center gap-2">
           <div className="avatar">
-            {post.user ? post.user.charAt(0).toUpperCase() : 'U'}
+            {post.userId ? post.userId.charAt(0).toUpperCase() : "U"}
           </div>
           <div>
-            <h3 className="post-author">{post.user || 'Unknown User'}</h3>
+            <h3 className="post-author">{post.userId || "Unknown User"}</h3>
             <span className="text-xs text-muted">Education Enthusiast</span>
           </div>
         </div>
@@ -129,63 +128,72 @@ const PostCard = ({ post, refreshPosts }) => {
           </button>
         </div>
       </div>
-      
+
       <div className="post-content">
         {editing ? (
           <div className="form-group">
-            <textarea 
+            <textarea
               className="form-control textarea"
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
             />
             <div className="flex gap-2 mt-4">
-              <button className="btn btn-primary" onClick={handleEdit}>Save</button>
-              <button className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleEdit}>
+                Save
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         ) : (
           <>
-            {renderMediaContent()}
-            <div className={`content ${expanded ? 'expanded' : ''}`}>
-              {formatContent(post.content)}
+            <div className="post-description">
+              {formatContent(post.description)}
             </div>
-            {post.content.length > 300 && !expanded && (
-              <button 
-                className="btn-link"
-                onClick={() => setExpanded(true)}
-              >
+            {renderMediaContent()}
+            {post.description.length > 300 && !expanded && (
+              <button className="btn-link" onClick={() => setExpanded(true)}>
                 Read more
               </button>
             )}
           </>
         )}
       </div>
-      
+
       <div className="post-footer">
         <div className="post-stats">
           <button className="btn-stat" onClick={handleLike}>
-            <FaThumbsUp /> <span>{post.like}</span>
+            <FaThumbsUp /> <span>{post.like || 0}</span>
           </button>
           <button className="btn-stat" onClick={handleUnlike}>
-            <FaThumbsDown /> <span>{post.unlike}</span>
+            <FaThumbsDown /> <span>{post.unlike || 0}</span>
           </button>
           <Link to={`/post/${post.id}`} className="btn-stat">
-            <FaComment /> <span>{post.comments ? post.comments.length : 0}</span>
+            <FaComment /> <span>{post.comments?.length || 0}</span>
           </Link>
+          <button className="btn-stat">
+            <FaShare /> Share
+          </button>
         </div>
-        
+
         <div className="post-badges">
           {containsCode && (
             <span className="badge mr-2">
               <FaCode /> Code Snippet
             </span>
           )}
-          {post.postType === 'PHOTO' && (
+          {post.mediaUrls?.some((url) =>
+            url.match(/\.(jpg|png|jpeg|gif)$/i)
+          ) && (
             <span className="badge badge-photo">
               <FaImage /> Photo
             </span>
           )}
-          {post.postType === 'VIDEO' && (
+          {post.mediaUrls?.some((url) => url.match(/\.(mp4|webm|ogg)$/i)) && (
             <span className="badge badge-video">
               <FaVideo /> Video
             </span>
