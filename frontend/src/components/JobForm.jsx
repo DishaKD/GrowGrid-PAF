@@ -1,45 +1,53 @@
+// src/components/JobForm.jsx
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  Box,
-  Typography,
-  Paper,
-  Chip,
-  Divider,
-  IconButton,
+  TextField, Button, Grid, MenuItem,
+  FormControl, InputLabel, Select, Box,
+  Typography, Paper, Chip, Divider, IconButton
 } from '@mui/material';
-import {
-  PhotoCamera,
-  Videocam,
-  Close,
-} from '@mui/icons-material';
+import { PhotoCamera, Videocam, Close } from '@mui/icons-material';
 
+// Employment options
 const employmentTypes = [
-  'Full-time',
-  'Part-time',
-  'Contract',
-  'Freelance',
-  'Internship',
-  'Temporary',
+  'Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'
 ];
 
-const validationSchema = Yup.object().shape({
-  title: Yup.string().required('Title is required').max(100, 'Title is too long'),
-  description: Yup.string().required('Description is required').max(2000, 'Description is too long'),
-  company: Yup.string().required('Company is required'),
-  location: Yup.string(),
-  employmentType: Yup.string(),
-  salary: Yup.number().positive('Salary must be positive').nullable(),
-  requirements: Yup.string(),
-  contactEmail: Yup.string().email('Invalid email').required('Contact email is required'),
+// Full validation schema with Yup
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .required('Job title is required')
+    .max(100, 'Title cannot exceed 100 characters'),
+
+  description: Yup.string()
+    .required('Job description is required')
+    .max(2000, 'Description cannot exceed 2000 characters'),
+
+  company: Yup.string()
+    .required('Company name is required'),
+
+  location: Yup.string()
+    .max(200, 'Location should be less than 200 characters'),
+
+  employmentType: Yup.string()
+    .oneOf(employmentTypes, 'Select a valid employment type'),
+
+  salary: Yup.string()
+    .matches(/^\d+(\.\d{1,2})?$/, 'Enter a valid salary (e.g. 50000 or 50000.00)')
+    .nullable(),
+
+  requirements: Yup.string()
+    .max(1000, 'Requirements should be less than 1000 characters'),
+
+  contactEmail: Yup.string()
+    .email('Enter a valid email')
+    .required('Contact email is required'),
+
+  deadline: Yup.date()
+    .nullable()
+    .required('Application deadline is required')
+    .min(new Date(), 'Deadline must be a future date'),
 });
 
 const JobForm = ({ initialValues = {}, onSubmit, isSubmitting }) => {
@@ -58,85 +66,81 @@ const JobForm = ({ initialValues = {}, onSubmit, isSubmitting }) => {
       salary: initialValues.salary || '',
       requirements: initialValues.requirements || '',
       contactEmail: initialValues.contactEmail || '',
+      deadline: initialValues.deadline || ''
     },
     validationSchema,
     onSubmit: (values) => {
       const formData = new FormData();
-      Object.entries(values).forEach(([key, value]) => {
-        if (value !== '') formData.append(key, value);
+      Object.entries(values).forEach(([key, val]) => {
+        if (val !== '') formData.append(key, val);
       });
-      photos.forEach((photo) => formData.append('photos', photo));
+      skills.forEach(skill => formData.append('skills', skill));
+      photos.forEach(photo => formData.append('photos', photo));
       if (video) formData.append('video', video);
-      skills.forEach((skill) => formData.append('skills', skill));
       onSubmit(formData);
     },
   });
 
-  const handleSkillAdd = (e) => {
+  const handleSkillAdd = e => {
     if (e.key === 'Enter' && e.target.value) {
+      e.preventDefault();
       setSkills([...skills, e.target.value]);
       e.target.value = '';
     }
   };
 
-  const handleSkillRemove = (index) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
+  const handleSkillRemove = idx =>
+    setSkills(skills.filter((_, i) => i !== idx));
 
   const handleMediaUpload = (type, files) => {
     if (type === 'photo') setPhotos([...photos, ...files]);
-    else if (type === 'video') setVideo(files[0]);
+    else setVideo(files[0]);
   };
 
-  const handleMediaRemove = (type, index) => {
-    if (type === 'photo') setPhotos(photos.filter((_, i) => i !== index));
-    else if (type === 'video') setVideo(null);
+  const handleMediaRemove = (type, idx) => {
+    if (type === 'photo') setPhotos(photos.filter((_, i) => i !== idx));
+    else setVideo(null);
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 2, maxWidth: 800, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        New Job Listing
-      </Typography>
-
+    <Paper sx={{ p: 2, maxWidth: 800, mx: 'auto' }}>
+      <Typography variant="h5" gutterBottom>New Job Listing</Typography>
       <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-        {/* Title */}
+
+        {/* Job Title */}
         <TextField
-          fullWidth
-          id="title"
-          name="title"
-          placeholder="Job Title (Product Designer, Frontend Engineer, etc...)"
+          fullWidth id="title" name="title"
+          label="Job Title"
           value={formik.values.title}
           onChange={formik.handleChange}
-          error={formik.touched.title && Boolean(formik.errors.title)}
+          error={!!formik.errors.title && formik.touched.title}
           helperText={formik.touched.title && formik.errors.title}
           sx={{ mb: 2 }}
-          InputProps={{ style: { fontSize: '1.2rem', fontWeight: 'bold' } }}
         />
 
         {/* Description */}
         <TextField
-          fullWidth
-          id="description"
-          name="description"
-          placeholder="Job description..."
-          multiline rows={4}
+          fullWidth id="description" name="description"
+          label="Job Description" multiline rows={4}
           value={formik.values.description}
           onChange={formik.handleChange}
-          error={formik.touched.description && Boolean(formik.errors.description)}
+          error={!!formik.errors.description && formik.touched.description}
           helperText={formik.touched.description && formik.errors.description}
           sx={{ mb: 2 }}
         />
 
         {/* Skills */}
         <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>Skills Required</Typography>
+          <Typography>Skills Required</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-            {skills.map((skill, idx) => (
-              <Chip key={idx} label={skill} onDelete={() => handleSkillRemove(idx)} variant="outlined" />
+            {skills.map((s, i) => (
+              <Chip key={i} label={s} onDelete={() => handleSkillRemove(i)} />
             ))}
           </Box>
-          <TextField fullWidth placeholder="Add skills (UX Design, JavaScript, etc...)" onKeyDown={handleSkillAdd} sx={{ mb: 2 }} />
+          <TextField
+            fullWidth placeholder="Add a skill and press Enter"
+            onKeyDown={handleSkillAdd}
+          />
         </Box>
 
         {/* Company & Location */}
@@ -144,90 +148,132 @@ const JobForm = ({ initialValues = {}, onSubmit, isSubmitting }) => {
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth id="company" name="company" label="Company"
-              value={formik.values.company} onChange={formik.handleChange}
-              error={formik.touched.company && Boolean(formik.errors.company)}
+              value={formik.values.company}
+              onChange={formik.handleChange}
+              error={!!formik.errors.company && formik.touched.company}
               helperText={formik.touched.company && formik.errors.company}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              fullWidth id="location" name="location" label="Location (San Francisco, Remote, etc...)"
-              value={formik.values.location} onChange={formik.handleChange}
-              error={formik.touched.location && Boolean(formik.errors.location)}
+              fullWidth id="location" name="location" label="Location"
+              value={formik.values.location}
+              onChange={formik.handleChange}
+              error={!!formik.errors.location && formik.touched.location}
               helperText={formik.touched.location && formik.errors.location}
             />
           </Grid>
         </Grid>
 
-        {/* Employment & Salary */}
+        {/* Employment Type & Salary */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={formik.touched.employmentType && Boolean(formik.errors.employmentType)}>
+            <FormControl fullWidth>
               <InputLabel>Employment Type</InputLabel>
               <Select
-                id="employmentType" name="employmentType" value={formik.values.employmentType}
-                onChange={formik.handleChange} label="Employment Type"
+                id="employmentType" name="employmentType"
+                value={formik.values.employmentType}
+                onChange={formik.handleChange}
+                label="Employment Type"
+                error={!!formik.errors.employmentType && formik.touched.employmentType}
               >
-                {employmentTypes.map((type) => (<MenuItem key={type} value={type}>{type}</MenuItem>))}
+                {employmentTypes.map(t => (
+                  <MenuItem key={t} value={t}>{t}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              fullWidth id="salary" name="salary" label="Compensation ($120k - $150k, $80/hr, etc...)"
-              value={formik.values.salary} onChange={formik.handleChange}
-              error={formik.touched.salary && Boolean(formik.errors.salary)}
+              fullWidth id="salary" name="salary" label="Compensation"
+              value={formik.values.salary}
+              onChange={formik.handleChange}
+              error={!!formik.errors.salary && formik.touched.salary}
               helperText={formik.touched.salary && formik.errors.salary}
             />
           </Grid>
         </Grid>
 
-        {/* Requirements & Contact Email */}
+        {/* Requirements */}
         <TextField
-          fullWidth id="requirements" name="requirements" label="Requirements" multiline rows={2}
-          value={formik.values.requirements} onChange={formik.handleChange}
-          error={formik.touched.requirements && Boolean(formik.errors.requirements)}
+          fullWidth id="requirements" name="requirements"
+          label="Requirements" multiline rows={2}
+          value={formik.values.requirements}
+          onChange={formik.handleChange}
+          error={!!formik.errors.requirements && formik.touched.requirements}
           helperText={formik.touched.requirements && formik.errors.requirements}
           sx={{ mb: 2 }}
         />
+
+        {/* Contact Email */}
         <TextField
-          fullWidth id="contactEmail" name="contactEmail" label="Contact Email" type="email"
-          value={formik.values.contactEmail} onChange={formik.handleChange}
-          error={formik.touched.contactEmail && Boolean(formik.errors.contactEmail)}
+          fullWidth id="contactEmail" name="contactEmail"
+          label="Contact Email" type="email"
+          value={formik.values.contactEmail}
+          onChange={formik.handleChange}
+          error={!!formik.errors.contactEmail && formik.touched.contactEmail}
           helperText={formik.touched.contactEmail && formik.errors.contactEmail}
           sx={{ mb: 2 }}
         />
 
-        {/* Application Deadline */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>Application Deadline</Typography>
-          <TextField fullWidth type="date" defaultValue={initialValues.deadline || ''} sx={{ mb: 2 }} />
-        </Box>
+        {/* Deadline */}
+        <TextField
+          fullWidth type="date" id="deadline" name="deadline"
+          value={formik.values.deadline}
+          onChange={formik.handleChange}
+          error={!!formik.errors.deadline && formik.touched.deadline}
+          helperText={formik.touched.deadline && formik.errors.deadline}
+          sx={{ mb: 2 }}
+        />
 
-        {/* Media Uploads */}
+        {/* Media Upload */}
         <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>Add Media</Typography>
+          <Typography>Add Media</Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton color="primary" component="label">
-              <PhotoCamera /><input type="file" hidden accept="image/*" multiple onChange={(e) => handleMediaUpload('photo', Array.from(e.target.files))} />
+            <IconButton component="label">
+              <PhotoCamera />
+              <input
+                type="file" hidden accept="image/*" multiple
+                onChange={e => handleMediaUpload('photo', Array.from(e.target.files))}
+              />
             </IconButton>
-            <IconButton color="primary" component="label">
-              <Videocam /><input type="file" hidden accept="video/*" onChange={(e) => handleMediaUpload('video', Array.from(e.target.files))} />
+            <IconButton component="label">
+              <Videocam />
+              <input
+                type="file" hidden accept="video/*"
+                onChange={e => handleMediaUpload('video', Array.from(e.target.files))}
+              />
             </IconButton>
           </Box>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-            {photos.map((photo, idx) => (
-              <Box key={idx} sx={{ position: 'relative' }}>
-                <img src={URL.createObjectURL(photo)} alt={`Preview ${idx}`} style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }} />
-                <IconButton size="small" sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'background.paper' }} onClick={() => handleMediaRemove('photo', idx)}>
+            {photos.map((p, i) => (
+              <Box key={i} sx={{ position: 'relative' }}>
+                <img
+                  src={URL.createObjectURL(p)}
+                  alt={`photo-${i}`}
+                  style={{ width: 100, height: 100, objectFit: 'cover' }}
+                />
+                <IconButton
+                  size="small"
+                  sx={{ position: 'absolute', top: 0, right: 0 }}
+                  onClick={() => handleMediaRemove('photo', i)}
+                >
                   <Close fontSize="small" />
                 </IconButton>
               </Box>
             ))}
             {video && (
               <Box sx={{ position: 'relative' }}>
-                <video src={URL.createObjectURL(video)} style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }} />
-                <IconButton size="small" sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'background.paper' }} onClick={() => handleMediaRemove('video')}>
+                <video
+                  src={URL.createObjectURL(video)}
+                  style={{ width: 100, height: 100, objectFit: 'cover' }}
+                  controls
+                />
+                <IconButton
+                  size="small"
+                  sx={{ position: 'absolute', top: 0, right: 0 }}
+                  onClick={() => setVideo(null)}
+                >
                   <Close fontSize="small" />
                 </IconButton>
               </Box>
@@ -236,8 +282,13 @@ const JobForm = ({ initialValues = {}, onSubmit, isSubmitting }) => {
         </Box>
 
         <Divider sx={{ my: 2 }} />
-        <Button type="submit" variant="contained" disabled={isSubmitting} fullWidth sx={{ py: 1.5, fontWeight: 'bold' }}>
-          {isSubmitting ? 'Posting Job...' : 'Post Job'}
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isSubmitting}
+          fullWidth
+        >
+          {isSubmitting ? 'Posting...' : 'Post Job'}
         </Button>
       </Box>
     </Paper>
