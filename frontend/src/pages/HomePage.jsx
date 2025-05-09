@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaImage,
-  FaVideo,
-  FaGraduationCap,
-  FaBook,
-  FaCode,
-  FaBell,
-  FaClipboardList,
-  FaChartLine,
-} from "react-icons/fa";
+import { FaBell } from "react-icons/fa";
 import api from "../services/api";
 import Navbar from "../components/Navbar";
 import CreatePost from "../components/CreatePost";
 import PostCard from "../components/PostCard";
 import NotificationPanel from "../components/NotificationPanel";
+import PostService from "../services/postService";
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState("all");
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -26,7 +17,7 @@ const HomePage = () => {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await api.getAllPosts();
+      const response = await PostService.getAllPosts();
       setPosts(response.data);
     } catch (err) {
       console.error("Error fetching posts", err);
@@ -69,30 +60,6 @@ const HomePage = () => {
     }
   };
 
-  const categories = [
-    { id: "all", name: "All", icon: <FaGraduationCap /> },
-    { id: "text", name: "Text", icon: <FaBook /> },
-    { id: "photo", name: "Photos", icon: <FaImage /> },
-    { id: "video", name: "Videos", icon: <FaVideo /> },
-    { id: "code", name: "Code", icon: <FaCode /> },
-    { id: "learningPlan", name: "Learning Plans", icon: <FaClipboardList /> },
-    { id: "progressUpdate", name: "Progress Updates", icon: <FaChartLine /> },
-  ];
-
-  const filteredPosts = posts.filter((post) => {
-    if (activeCategory === "all") return true;
-    if (activeCategory === "code") return post.content.includes("```");
-    if (activeCategory === "text")
-      return post.postType === "TEXT" && !post.content.includes("```");
-    if (activeCategory === "photo") return post.postType === "PHOTO";
-    if (activeCategory === "video") return post.postType === "VIDEO";
-    if (activeCategory === "learningPlan")
-      return post.postType === "LEARNING_PLAN";
-    if (activeCategory === "progressUpdate")
-      return post.postType === "PROGRESS_UPDATE";
-    return true;
-  });
-
   return (
     <div className="home-page">
       <Navbar unreadNotifications={unreadCount} />
@@ -100,24 +67,6 @@ const HomePage = () => {
       <div className="container">
         <div className="main-content">
           <aside className="sidebar">
-            <div className="card categories">
-              <h3 className="section-title">Post Types</h3>
-              <ul className="category-list">
-                {categories.map((category) => (
-                  <li
-                    key={category.id}
-                    className={`category-item ${
-                      activeCategory === category.id ? "active" : ""
-                    }`}
-                    onClick={() => setActiveCategory(category.id)}
-                  >
-                    {category.icon}
-                    <span>{category.name}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             <div className="card trending">
               <h3 className="section-title">Trending Topics</h3>
               <ul className="trending-list">
@@ -167,14 +116,14 @@ const HomePage = () => {
 
             {isLoading ? (
               <div className="loading">Loading posts...</div>
-            ) : filteredPosts.length > 0 ? (
-              filteredPosts.map((post) => (
+            ) : posts.length > 0 ? (
+              posts.map((post) => (
                 <PostCard key={post.id} post={post} refreshPosts={fetchPosts} />
               ))
             ) : (
               <div className="no-posts">
                 <h3>No posts found</h3>
-                <p>Be the first to share content in this category!</p>
+                <p>Be the first to share content!</p>
               </div>
             )}
           </div>

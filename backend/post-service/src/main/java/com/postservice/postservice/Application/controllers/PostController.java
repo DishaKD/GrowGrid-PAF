@@ -7,10 +7,12 @@ import com.postservice.postservice.Domain.service.PostService;
 import lombok.AllArgsConstructor;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/posts")
+@CrossOrigin(origins = "http://localhost:3000")
 @AllArgsConstructor
 public class PostController {
 
