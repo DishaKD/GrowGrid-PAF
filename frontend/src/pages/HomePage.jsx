@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaImage,
-  FaVideo,
-  FaGraduationCap,
-  FaBook,
-  FaCode,
-  FaBell,
-  FaClipboardList,
-  FaChartLine,
-} from "react-icons/fa";
+import { FaBell } from "react-icons/fa";
 import api from "../services/api";
 import Navbar from "../components/Navbar";
 import CreatePost from "../components/CreatePost";
