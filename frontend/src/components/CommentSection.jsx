@@ -31,11 +31,32 @@ const CommentSection = ({ postId }) => {
         postId: postId,
       };
 
+      // Add the comment
       await commentApi.addComment(comment);
+
+      // Create a notification for the post owner
+      createNotification(comment);
+
       setNewComment("");
       fetchComments();
     } catch (err) {
       console.error("Error adding comment", err);
+    }
+  };
+
+  const createNotification = async (comment) => {
+    try {
+      const notification = {
+        recipientUserId: 1,
+        senderUserId: comment.userId,
+        postId: postId,
+        commentId: comment.id,
+        type: "POST_COMMENT",
+      };
+
+      await commentApi.createNotification(notification);
+    } catch (err) {
+      console.error("Error creating notification", err);
     }
   };
 
