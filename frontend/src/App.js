@@ -6,6 +6,7 @@ import JobsPage from "./pages/JobHomePage";
 import JobDetailsPage from "./pages/JobDetailsPage";
 import JobCreatePage from "./pages/CreateJobPage";
 import JobEditPage from "./pages/EditJobPage";
+import LearningPlanPage from "./pages/LearningPlanPage";
 import "./styles/global.css";
 import "./styles/components.css";
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/jobs/:id" element={<JobDetailsPage />} />
         <Route path="/create-job" element={<JobCreatePage />} />
         <Route path="/jobs/:id/edit" element={<JobEditPage />} />
+        <Route path="/learning-plans" element={<LearningPlanPage />} />
       </Routes>
     </Router>
   );
