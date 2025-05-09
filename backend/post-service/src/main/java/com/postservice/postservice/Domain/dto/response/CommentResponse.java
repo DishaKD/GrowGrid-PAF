@@ -1,0 +1,14 @@
+package com.postservice.postservice.Domain.dto.response;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class CommentResponse {
+    private Long id;
+    private String content;
+    private String userId;
+    private Long postId;
+    private String createdAt;
+}
