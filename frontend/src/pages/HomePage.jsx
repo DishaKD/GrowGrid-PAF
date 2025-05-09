@@ -28,7 +28,7 @@ const HomePage = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.getNotifications("Guest"); // Replace with dynamic username
+      const response = await api.getNotifications("1");
       setNotifications(response.data);
       const unread = response.data.filter((n) => !n.read).length;
       setUnreadCount(unread);
@@ -53,7 +53,7 @@ const HomePage = () => {
 
   const markAllAsRead = async () => {
     try {
-      await api.markAllNotificationsAsRead("Guest"); // Replace with dynamic username
+      await api.markAllNotificationsAsRead("1");
       fetchNotifications();
     } catch (err) {
       console.error("Error marking all notifications as read", err);
