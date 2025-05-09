@@ -52,8 +52,11 @@ const PostCard = ({ post, refreshPosts }) => {
   const handleEdit = async () => {
     if (editing) {
       try {
-        const updatedPost = { ...post, description: editContent };
-        await api.updatePost(post.id, updatedPost);
+        const formData = new FormData();
+        formData.append("description", editContent);
+        // if you need to re-upload mediaFiles, append them here
+
+        await api.updatePost(post.id, formData);
         refreshPosts?.();
         setEditing(false);
       } catch (err) {
@@ -86,21 +89,23 @@ const PostCard = ({ post, refreshPosts }) => {
       }
     });
   };
+  const BASE_URL = "http://localhost:8090";
 
   const renderMediaContent = () => {
     if (!post.mediaUrls || post.mediaUrls.length === 0) return null;
 
     return post.mediaUrls.map((url, index) => {
+      const fullUrl = `${BASE_URL}/${url}`;
       const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
       return (
         <div key={index} className="media-content">
           {isVideo ? (
             <video controls className="post-media">
-              <source src={url} type="video/mp4" />
+              <source src={fullUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           ) : (
-            <img src={url} alt={`media-${index}`} className="post-media" />
+            <img src={fullUrl} alt={`media-${index}`} className="post-media" />
           )}
         </div>
       );
