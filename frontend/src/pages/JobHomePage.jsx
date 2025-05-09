@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Container, Typography, CircularProgress, Alert } from "@mui/material";
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  Button,
+  Box,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import JobCard from "../components/JobCard";
 import JobService from "../services/jobService";
 
@@ -7,12 +15,12 @@ const HomePage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const response = await JobService.getAllJobs();
-        // Ensure the response is an array
         if (Array.isArray(response.data)) {
           setJobs(response.data);
         } else {
@@ -46,13 +54,24 @@ const HomePage = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Available Jobs
-      </Typography>
-      {jobs.length === 0 ? (
-        <Typography variant="body1">
-          No jobs available at the moment.
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" component="h1">
+          Available Jobs
         </Typography>
+        <Button variant="contained" color="primary" onClick={() => navigate("/create-job")}>
+          Post Job
+        </Button>
+      </Box>
+
+      {jobs.length === 0 ? (
+        <Typography variant="body1">No jobs available at the moment.</Typography>
       ) : (
         jobs.map((job) => <JobCard key={job.id} job={job} />)
       )}
