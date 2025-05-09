@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/job-posts")
-@CrossOrigin(origins = "http://localhost:3002")
+@CrossOrigin(origins = "http://localhost:3000")
 public class JobPostController {
 
     private final JobPostService jobPostService;
@@ -25,7 +25,7 @@ public class JobPostController {
         this.jobPostService = jobPostService;
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<JobPostResponse> createJobPost(
             @RequestPart("jobPost") @Valid JobPostRequest jobPostRequest,
             @RequestPart(value = "photos", required = false) MultipartFile[] photos,
@@ -41,7 +41,7 @@ public class JobPostController {
         return ResponseEntity.ok(jobPost);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<JobPostResponse>> getAllJobPosts() {
         List<JobPostResponse> jobPosts = jobPostService.getAllJobPosts();
         return ResponseEntity.ok(jobPosts);
