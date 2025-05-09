@@ -104,7 +104,7 @@ const JobForm = ({ initialValues = {}, onSubmit, isSubmitting }) => {
 
   return (
     <Paper sx={{ p: 2, maxWidth: 800, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom>New Job Listing</Typography>
+    
       <Box component="form" onSubmit={formik.handleSubmit} noValidate>
 
         {/* Job Title */}
