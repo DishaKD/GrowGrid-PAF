@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Container, Typography, CircularProgress, Alert } from '@mui/material';
-import JobCard from '../components/JobCard';
-import JobService from '../services/jobService';
+import { useEffect, useState } from "react";
+import { Container, Typography, CircularProgress, Alert } from "@mui/material";
+import JobCard from "../components/JobCard";
+import JobService from "../services/jobService";
 
 const HomePage = () => {
   const [jobs, setJobs] = useState([]);
@@ -11,10 +11,15 @@ const HomePage = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const data = await JobService.getAllJobs();
-        setJobs(data);
+        const response = await JobService.getAllJobs();
+        // Ensure the response is an array
+        if (Array.isArray(response.data)) {
+          setJobs(response.data);
+        } else {
+          throw new Error("Response data is not an array");
+        }
       } catch (err) {
-        setError(err.message || 'Failed to fetch jobs');
+        setError(err.message || "Failed to fetch jobs");
       } finally {
         setLoading(false);
       }
@@ -25,7 +30,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Container sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Container>
     );
@@ -45,7 +50,9 @@ const HomePage = () => {
         Available Jobs
       </Typography>
       {jobs.length === 0 ? (
-        <Typography variant="body1">No jobs available at the moment.</Typography>
+        <Typography variant="body1">
+          No jobs available at the moment.
+        </Typography>
       ) : (
         jobs.map((job) => <JobCard key={job.id} job={job} />)
       )}
