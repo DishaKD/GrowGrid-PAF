@@ -19,7 +19,7 @@ const Navbar = ({ unreadNotifications }) => {
           {/* Brand */}
           <Link to="/" className="navbar-brand">
             <FaGraduationCap className="brand-icon" />
-            <span>SkillHub</span>
+            <span>GrowGrid</span>
           </Link>
 
           {/* Search */}
