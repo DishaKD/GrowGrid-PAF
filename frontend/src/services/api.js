@@ -11,12 +11,6 @@ const instance = axios.create({
 
 // Handle file uploads and URL creation for development
 const handleMediaUpload = async (file) => {
-  // In a real application, you would upload the file to a storage service
-  // and get back a URL. For this demo, we're using object URLs.
-
-  // TODO: Replace with actual file upload API when backend is ready
-
-  // For demo purposes only - object URLs will only work in the current session
   const objectUrl = URL.createObjectURL(file);
 
   return {
@@ -34,13 +28,24 @@ const api = {
   deleteComment: (commentId) => instance.delete(`/comments/${commentId}`),
 
   // Notifications
+  // Get notifications for a user
   getNotifications: (username) => instance.get(`/notifications/${username}`),
+
+  // Get unread notifications for a user (Note: this was missing in your backend, so we can assume you will add a new route for unread notifications)
   getUnreadNotifications: (username) =>
-    instance.get(`/notifications/${username}/unread`),
+    instance.get(`/notifications/unread/${username}`),
+
+  // Mark a notification as read
   markNotificationAsRead: (notificationId) =>
-    instance.put(`/notifications/${notificationId}/mark-read`),
+    instance.put(`/notifications/mark-as-read/${notificationId}`),
+
+  // Mark all notifications for a user as read (Add this route in your backend if it doesn't exist yet)
   markAllNotificationsAsRead: (username) =>
-    instance.put(`/notifications/${username}/mark-all-read`),
+    instance.put(`/notifications/mark-all-read/${username}`),
+
+  // Create a notification
+  createNotification: (notification) =>
+    instance.post(`/notifications`, notification),
 };
 
 export default api;
