@@ -1,11 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaArrowLeft, FaThumbsUp, FaThumbsDown, FaComment, FaImage, FaVideo } from 'react-icons/fa';
-import api from '../services/api';
-import Navbar from '../components/Navbar';
-import CommentSection from '../components/CommentSection';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+  FaArrowLeft,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaComment,
+  FaImage,
+  FaVideo,
+} from "react-icons/fa";
+import api from "../services/api";
+import Navbar from "../components/Navbar";
+import CommentSection from "../components/CommentSection";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import PostService from "../services/postService";
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -16,12 +24,12 @@ const PostDetail = () => {
   const fetchPost = async () => {
     setLoading(true);
     try {
-      const response = await api.getPostById(id);
-      setPost(response.data);
+      const response = await PostService.getPostById(id);
+      setPost(response);
       setError(null);
     } catch (err) {
-      console.error('Error fetching post details', err);
-      setError('Failed to load post details. Please try again later.');
+      console.error("Error fetching post details", err);
+      setError("Failed to load post details. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +44,7 @@ const PostDetail = () => {
       await api.likePost(post.id, post.like);
       fetchPost();
     } catch (err) {
-      console.error('Error liking post', err);
+      console.error("Error liking post", err);
     }
   };
 
@@ -45,24 +53,24 @@ const PostDetail = () => {
       await api.unlikePost(post.id, post.unlike);
       fetchPost();
     } catch (err) {
-      console.error('Error unliking post', err);
+      console.error("Error unliking post", err);
     }
   };
 
   const formatContent = (content) => {
-    if (!content || !content.includes('```')) return content;
-    
-    const parts = content.split('```');
+    if (!content || !content.includes("```")) return content;
+
+    const parts = content.split("```");
     return parts.map((part, index) => {
       if (index % 2 === 0) {
         return <div key={index}>{part}</div>;
       } else {
-        const language = part.split('\n')[0];
+        const language = part.split("\n")[0];
         const code = part.substring(language.length + 1);
         return (
-          <SyntaxHighlighter 
+          <SyntaxHighlighter
             key={index}
-            language={language || 'javascript'} 
+            language={language || "javascript"}
             style={atomOneDark}
             className="code-block"
           >
@@ -74,33 +82,27 @@ const PostDetail = () => {
   };
 
   const renderMediaContent = () => {
-    if (!post || !post.contentUrl) return null;
-    
-    if (post.postType === 'PHOTO') {
+    if (!post || !post.mediaUrls || post.mediaUrls.length === 0) return null;
+
+    return post.mediaUrls.map((url, index) => {
+      const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
       return (
-        <div className="media-content">
-          <img 
-            src={post.contentUrl} 
-            alt="Post" 
-            className="post-media"
-          />
+        <div key={index} className="media-content">
+          {isVideo ? (
+            <video controls className="post-media">
+              <source src={`/${url}`} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img
+              src={`/${url}`}
+              alt={`media-${index}`}
+              className="post-media"
+            />
+          )}
         </div>
       );
-    } else if (post.postType === 'VIDEO') {
-      return (
-        <div className="media-content">
-          <video 
-            controls 
-            className="post-media"
-          >
-            <source src={post.contentUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      );
-    }
-    
-    return null;
+    });
   };
 
   if (loading) {
@@ -122,7 +124,7 @@ const PostDetail = () => {
         <Navbar />
         <div className="container">
           <div className="error-container">
-            <div className="error">{error || 'Post not found'}</div>
+            <div className="error">{error || "Post not found"}</div>
             <Link to="/" className="btn btn-primary">
               <FaArrowLeft /> Back to Home
             </Link>
@@ -135,7 +137,7 @@ const PostDetail = () => {
   return (
     <div className="post-detail-page">
       <Navbar />
-      
+
       <div className="container">
         <div className="post-detail-container">
           <div className="back-link">
@@ -143,37 +145,44 @@ const PostDetail = () => {
               <FaArrowLeft /> Back to Feed
             </Link>
           </div>
-          
+
           <div className="card post-detail-card">
             <div className="post-header">
               <div className="flex items-center gap-2">
                 <div className="avatar">
-                  {post.user ? post.user.charAt(0).toUpperCase() : 'U'}
+                  {post.user ? post.user.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div>
-                  <h3 className="post-author">{post.user || 'Unknown User'}</h3>
-                  <span className="text-xs text-muted">Education Enthusiast</span>
+                  <h3 className="post-author">
+                    {post.userId || "Unknown User"}
+                  </h3>
+                  <div className="avatar">
+                    {post.userId ? post.userId.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <span className="text-xs text-muted">
+                    Education Enthusiast
+                  </span>
                 </div>
               </div>
               <div className="post-type">
-                {post.postType === 'PHOTO' && (
+                {post.postType === "PHOTO" && (
                   <span className="badge badge-photo">
                     <FaImage /> Photo
                   </span>
                 )}
-                {post.postType === 'VIDEO' && (
+                {post.postType === "VIDEO" && (
                   <span className="badge badge-video">
                     <FaVideo /> Video
                   </span>
                 )}
               </div>
             </div>
-            
+
             <div className="post-content detailed">
               {renderMediaContent()}
-              {formatContent(post.content)}
+              {formatContent(post.description)}
             </div>
-            
+
             <div className="post-stats">
               <button className="btn-stat" onClick={handleLike}>
                 <FaThumbsUp /> <span>{post.like}</span>
@@ -182,16 +191,17 @@ const PostDetail = () => {
                 <FaThumbsDown /> <span>{post.unlike}</span>
               </button>
               <div className="btn-stat">
-                <FaComment /> <span>{post.comments ? post.comments.length : 0}</span>
+                <FaComment />{" "}
+                <span>{post.comments ? post.comments.length : 0}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="card comments-card">
-            <CommentSection 
-              postId={post.id} 
-              comments={post.comments} 
-              refreshPost={fetchPost} 
+            <CommentSection
+              postId={post.id}
+              comments={post.comments}
+              refreshPost={fetchPost}
             />
           </div>
         </div>
