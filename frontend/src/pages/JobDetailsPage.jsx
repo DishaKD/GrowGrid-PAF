@@ -1,21 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
+  Box,
+  Button,
+  Chip,
   Container,
   Typography,
-  Button,
-  Box,
-  Chip,
-  Divider,
-  Alert,
   CircularProgress,
-  Grid,
+  Alert,
+  IconButton,
+  Card,
+  CardContent,
+  Divider,
+  Stack,
   Avatar,
-  Paper,
-} from '@mui/material';
-import { Share, Edit, Delete } from '@mui/icons-material';
-import ReactPlayer from 'react-player';
-import JobService from '../services/jobService';
+} from "@mui/material";
+import { Share, Edit, Delete } from "@mui/icons-material";
+import ReactPlayer from "react-player";
+import JobService from "../services/jobService";
 
 const JobDetailsPage = () => {
   const { id } = useParams();
@@ -30,9 +32,10 @@ const JobDetailsPage = () => {
     const fetchJob = async () => {
       try {
         const data = await JobService.getJobById(id);
+        console.log("Fetched job:", data); // Check if this logs your data
         setJob(data);
       } catch (err) {
-        setError(err.message || 'Failed to fetch job details');
+        setError(err.message || "Failed to fetch job details");
       } finally {
         setLoading(false);
       }
@@ -47,21 +50,22 @@ const JobDetailsPage = () => {
       const updatedJob = await JobService.shareJob(id);
       setJob(updatedJob);
     } catch (err) {
-      setError(err.message || 'Failed to share job');
+      setError(err.message || "Failed to share job");
     } finally {
       setIsSharing(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this job post?')) return;
-    
+    if (!window.confirm("Are you sure you want to delete this job post?"))
+      return;
+
     setIsDeleting(true);
     try {
       await JobService.deleteJob(id);
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      setError(err.message || 'Failed to delete job');
+      setError(err.message || "Failed to delete job");
     } finally {
       setIsDeleting(false);
     }
@@ -69,7 +73,7 @@ const JobDetailsPage = () => {
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Container sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
         <CircularProgress />
       </Container>
     );
@@ -77,7 +81,7 @@ const JobDetailsPage = () => {
 
   if (error) {
     return (
-      <Container sx={{ mt: 4 }}>
+      <Container sx={{ mt: 6 }}>
         <Alert severity="error">{error}</Alert>
       </Container>
     );
@@ -85,116 +89,131 @@ const JobDetailsPage = () => {
 
   if (!job) {
     return (
-      <Container sx={{ mt: 4 }}>
+      <Container sx={{ mt: 6 }}>
         <Alert severity="warning">Job not found</Alert>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          {job.title}
-        </Typography>
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={<Share />}
-            onClick={handleShare}
-            disabled={isSharing}
-            sx={{ mr: 2 }}
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Card elevation={3} sx={{ borderRadius: 3, overflow: "hidden" }}>
+        <CardContent sx={{ p: 4 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "start",
+              mb: 3,
+            }}
           >
-            Share ({job.shareCount})
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Edit />}
-            onClick={() => navigate(`/jobs/${id}/edit`)}
-            sx={{ mr: 2 }}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<Delete />}
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            Delete
-          </Button>
-        </Box>
-      </Box>
+            <Box>
+              <Typography variant="h4" fontWeight={600}>
+                {job.title}
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                {job.company} • {job.location}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1}>
+              <IconButton onClick={handleShare} disabled={isSharing}>
+                <Share />
+              </IconButton>
+              <IconButton onClick={() => navigate(`/jobs/${id}/edit`)}>
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                <Delete />
+              </IconButton>
+            </Stack>
+          </Box>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <Chip label={job.company} />
-        <Chip label={job.location} />
-        <Chip label={job.employmentType} />
-        {job.salary && <Chip label={`$${job.salary.toLocaleString()}`} />}
-      </Box>
+          {/* Tags */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" mb={3}>
+            <Chip label={job.employmentType} color="primary" />
+            {job.salary && <Chip label={`$${job.salary.toLocaleString()}`} />}
+            <Chip label={`Shared ${job.shareCount} times`} variant="outlined" />
+          </Stack>
 
-      <Divider sx={{ my: 3 }} />
+          {/* Description */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom>
+              Description
+            </Typography>
+            <Typography>{job.description}</Typography>
+          </Box>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
-          <Typography variant="h6" gutterBottom>
-            Description
-          </Typography>
-          <Typography paragraph>{job.description}</Typography>
-
+          {/* Requirements */}
           {job.requirements && (
-            <>
+            <Box mb={3}>
               <Typography variant="h6" gutterBottom>
                 Requirements
               </Typography>
-              <Typography paragraph>{job.requirements}</Typography>
-            </>
+              <Typography>{job.requirements}</Typography>
+            </Box>
           )}
 
-          <Typography variant="h6" gutterBottom>
-            Contact
-          </Typography>
-          <Typography paragraph>Email: {job.contactEmail}</Typography>
-        </Grid>
+          {/* Contact Info */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom>
+              Contact
+            </Typography>
+            <Typography>Email: {job.contactEmail}</Typography>
+          </Box>
 
-        <Grid item xs={12} md={4}>
-          {job.photoUrls && job.photoUrls.length > 0 && (
-            <>
-              <Typography variant="h6" gutterBottom>
-                Photos
-              </Typography>
-              <Grid container spacing={1}>
-                {job.photoUrls.map((url, index) => (
-                  <Grid item key={index} xs={6}>
-                    <Paper elevation={1}>
-                      <Avatar
-                        variant="rounded"
-                        src={url}
-                        sx={{ width: '100%', height: 'auto' }}
-                      />
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
-          )}
+          <Divider sx={{ my: 3 }} />
 
-          {job.videoUrl && (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Video
-              </Typography>
-              <ReactPlayer
-                url={job.videoUrl}
-                width="100%"
-                height="auto"
-                controls
-              />
-            </>
-          )}
-        </Grid>
-      </Grid>
+          {/* Media */}
+          <Box>
+            {/* Video */}
+            {job.videoUrl && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Introduction Video
+                </Typography>
+                <Box
+                  sx={{
+                    position: "relative",
+                    paddingTop: "56.25%", // 16:9 aspect ratio
+                  }}
+                >
+                  <ReactPlayer
+                    url={job.videoUrl}
+                    controls
+                    width="100%"
+                    height="100%"
+                    style={{ position: "absolute", top: 0, left: 0 }}
+                  />
+                </Box>
+              </Box>
+            )}
+
+            {/* Photos */}
+            {job.photoUrls?.length > 0 && (
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Photos
+                </Typography>
+                <Stack direction="row" spacing={2} mt={1}>
+                  {job.photoUrls.map((url, index) => (
+                    <Avatar
+                      key={index}
+                      src={url}
+                      variant="rounded"
+                      sx={{ width: 80, height: 80 }}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
     </Container>
   );
 };
