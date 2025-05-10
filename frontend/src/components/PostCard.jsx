@@ -19,6 +19,10 @@ const PostCard = ({ post, refreshPosts }) => {
   const [expanded, setExpanded] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [editContent, setEditContent] = React.useState(post.description);
+  const [newMedia, setNewMedia] = React.useState([]);
+  const [existingMedia, setExistingMedia] = React.useState(
+    post.mediaUrls || []
+  );
 
   const containsCode = post?.description?.includes("```");
 
@@ -54,16 +58,23 @@ const PostCard = ({ post, refreshPosts }) => {
       try {
         const formData = new FormData();
         formData.append("description", editContent);
-        // if you need to re-upload mediaFiles, append them here
+
+        newMedia.forEach((file) => {
+          formData.append("mediaFiles", file);
+        });
+
+        formData.append("existingMedia", JSON.stringify(existingMedia));
 
         await api.updatePost(post.id, formData);
         refreshPosts?.();
         setEditing(false);
+        setNewMedia([]);
       } catch (err) {
         console.error("Error updating post", err);
       }
     } else {
       setEditing(true);
+      setExistingMedia(post.mediaUrls || []);
     }
   };
 
@@ -137,18 +148,76 @@ const PostCard = ({ post, refreshPosts }) => {
       <div className="post-content">
         {editing ? (
           <div className="form-group">
+            {/* Description Editor */}
             <textarea
               className="form-control textarea"
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
             />
+
+            {/* Existing Media Preview + Removal */}
+            <div className="existing-media mt-4">
+              <h4 className="text-sm font-semibold mb-2">Existing Media:</h4>
+              <div className="flex flex-wrap gap-2">
+                {existingMedia.map((url, index) => {
+                  const fullUrl = `${BASE_URL}/${url}`;
+                  const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
+                  return (
+                    <div key={index} className="relative media-item">
+                      {isVideo ? (
+                        <video
+                          controls
+                          className="w-32 h-20 object-cover rounded"
+                        >
+                          <source src={fullUrl} type="video/mp4" />
+                        </video>
+                      ) : (
+                        <img
+                          src={fullUrl}
+                          alt={`media-${index}`}
+                          className="w-32 h-20 object-cover rounded"
+                        />
+                      )}
+                      <button
+                        onClick={() =>
+                          setExistingMedia(
+                            existingMedia.filter((_, i) => i !== index)
+                          )
+                        }
+                        className="absolute top-0 right-0 bg-red-600 text-white text-xs px-1 rounded-bl"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Upload New Media */}
+            <div className="mt-4">
+              <h4 className="text-sm font-semibold mb-1">Add New Media:</h4>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={(e) => setNewMedia(Array.from(e.target.files))}
+              />
+            </div>
+
+            {/* Buttons */}
             <div className="flex gap-2 mt-4">
               <button className="btn btn-primary" onClick={handleEdit}>
                 Save
               </button>
               <button
                 className="btn btn-ghost"
-                onClick={() => setEditing(false)}
+                onClick={() => {
+                  setEditing(false);
+                  setNewMedia([]);
+                  setEditContent(post.description);
+                  setExistingMedia(post.mediaUrls || []);
+                }}
               >
                 Cancel
               </button>
