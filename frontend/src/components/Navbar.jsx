@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import {
   FaGraduationCap,
   FaSearch,
-  FaBell,
   FaUserCircle,
   FaBriefcase,
   FaClipboardList,
-  FaChartLine,
   FaSignInAlt,
 } from "react-icons/fa";
 
@@ -46,29 +44,6 @@ const Navbar = ({ unreadNotifications }) => {
               title="Learning Plans"
             >
               <FaClipboardList />
-            </Link>
-
-            {/* Learning Progress */}
-            <Link
-              to="/progress-updates"
-              className="nav-icon"
-              title="Progress Updates"
-            >
-              <FaChartLine />
-            </Link>
-
-            {/* Notifications */}
-            <Link
-              to="/notifications"
-              className="nav-icon"
-              title="Notifications"
-            >
-              <FaBell />
-              {unreadNotifications > 0 && (
-                <span className="notification-count">
-                  {unreadNotifications}
-                </span>
-              )}
             </Link>
 
             {/* Profile */}
